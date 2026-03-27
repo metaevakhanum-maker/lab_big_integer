@@ -1,4 +1,4 @@
-cd lab_big_integer// =============================================================
+// =============================================================
 //  big_integer.cpp -- BigInteger class implementation
 //
 //  TASK: Implement all methods declared in big_integer.h
@@ -76,8 +76,11 @@ BigInteger::BigInteger(int value) : digits_(), negative_(value < 0) {
 }
 
 BigInteger::BigInteger(long long value) : digits_(), negative_(value < 0) {
-    unsigned long long x = value;
-    if (value < 0) x = -value;
+    unsigned long long x;
+    if (value < 0)
+        x = static_cast <unsigned long long>(-(value + 1)) + 1;
+    else
+        x = value;
     if (x == 0) {
         digits_ = {0};
         negative_ = false;
@@ -194,6 +197,9 @@ BigInteger BigInteger::operator*(const BigInteger& rhs) const {
 }
 
 BigInteger& BigInteger::operator/=(const BigInteger& rhs) {
+    if (rhs.is_zero()){
+        throw std::runtime_error("Division by zero");
+    }
     if (is_zero()) return *this;
     
     bool sign = negative_ != rhs.negative_;
@@ -234,14 +240,20 @@ BigInteger BigInteger::operator/(const BigInteger& rhs) const {
 }
 
 BigInteger& BigInteger::operator%=(const BigInteger& rhs) {
+    if (rhs.is_zero()){
+        throw std::runtime_error("Division by zero");
+    }
     *this = *this - (*this / rhs) * rhs;
     return *this;
 }
 
-BigInteger BigInteger::operator%(const BigInteger& rhs) const {
-    BigInteger r = *this;
-    r %= rhs;
-    return r;
+BigInteger& BigInteger::operator%=(const BigInteger& rhs) {
+    BigInteger q = *this / rhs;
+    *this = *this - q * rhs;
+    if (!is_zero() && negative_ != rhs.negative_) {
+        *this += rhs;
+    }
+    return *this;
 }
 
 // Унарные операции
