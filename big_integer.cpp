@@ -274,9 +274,8 @@ BigInteger& BigInteger::operator%=(const BigInteger& rhs) {
 }
 
 BigInteger BigInteger::operator%(const BigInteger& rhs) const {
-    BigInteger r = *this;
-    r %= rhs;
-    return r;
+    BigInteger quotient = *this /rhs;
+    return *this - quotient * rhs;
 }
 
 // Унарные операции
