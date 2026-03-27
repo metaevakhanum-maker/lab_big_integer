@@ -107,14 +107,18 @@ BigInteger::BigInteger(const std::string& s) : digits_(), negative_(false) {
         negative_ = true;
         start = 1;
     }
-    for (size_t i = s.length(); i > start; i--)
+    for (size_t i = s.length(); i > start; i--){
+        if (!isdigit(s[i-1])) {
+            throw std::invalid_argument("Invalid charecter in input");
+        }
         digits_.push_back(s[i-1] - '0');
+    }
     remove_zeros(digits_);
     if (digits_.size() == 1 && digits_[0] == 0)
         negative_ = false;
 }
 
-// Сравнение
+// Сравнениеi
 bool BigInteger::operator==(const BigInteger& rhs) const {
     return negative_ == rhs.negative_ && digits_ == rhs.digits_;
 }
@@ -228,7 +232,7 @@ BigInteger& BigInteger::operator/=(const BigInteger& rhs) {
         remove_zeros(cur.digits_);
         
         int x = 0;
-        int low = 0, high = 10;
+        int low = 0, high = 9;
         while (low <= high) {
             int mid = (low + high) / 2;
             BigInteger test = b * mid;
