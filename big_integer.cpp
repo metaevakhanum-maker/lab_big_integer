@@ -245,16 +245,7 @@ BigInteger& BigInteger::operator%=(const BigInteger& rhs) {
     }
     *this = *this - (*this / rhs) * rhs;
     return *this;
-}
-
-BigInteger& BigInteger::operator%=(const BigInteger& rhs) {
-    BigInteger q = *this / rhs;
-    *this = *this - q * rhs;
-    if (!is_zero() && negative_ != rhs.negative_) {
-        *this += rhs;
-    }
-    return *this;
-}
+};
 
 // Унарные операции
 BigInteger BigInteger::operator-() const {
