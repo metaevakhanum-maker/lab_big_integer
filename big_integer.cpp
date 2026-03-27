@@ -9,6 +9,8 @@
 #include "big_integer.h"
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <climits>
 
 // Вспомогательные функции
 static void remove_zeros(std::vector<int>& a) {
@@ -77,10 +79,15 @@ BigInteger::BigInteger(int value) : digits_(), negative_(value < 0) {
 
 BigInteger::BigInteger(long long value) : digits_(), negative_(value < 0) {
     unsigned long long x;
-    if (value < 0)
-        x = static_cast <unsigned long long>(-(value + 1)) + 1;
-    else
+    if (value < 0) {
+        if (value == LLONG_MIN) {
+            x = static_cast<unsigned long long>(LLONG_MAX) + 1;
+        } else {
+            x = -value;
+        }
+    } else {
         x = value;
+    }
     if (x == 0) {
         digits_ = {0};
         negative_ = false;
@@ -197,7 +204,7 @@ BigInteger BigInteger::operator*(const BigInteger& rhs) const {
 }
 
 BigInteger& BigInteger::operator/=(const BigInteger& rhs) {
-    if (rhs.is_zero()){
+    if (rhs.is_zero()) {
         throw std::runtime_error("Division by zero");
     }
     if (is_zero()) return *this;
@@ -219,20 +226,29 @@ BigInteger& BigInteger::operator/=(const BigInteger& rhs) {
         remove_zeros(cur.digits_);
         
         int x = 0;
-        while (cmp_abs(cur.digits_, b.digits_) >= 0) {
-            cur.digits_ = sub_abs(cur.digits_, b.digits_);
-            x++;
+        int low = 0, high = 10;
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            BigInteger test = b * mid;
+            if (cmp_abs(cur.digits_, test.digits_) >= 0) {
+                x = mid;
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
         }
-        res.insert(res.begin(), x);
+        
+        cur.digits_ = sub_abs(cur.digits_, (b * x).digits_);
+        res.push_back(x);
     }
     
+    std::reverse(res.begin(), res.end());
     remove_zeros(res);
     digits_ = res;
     negative_ = sign;
     if (is_zero()) negative_ = false;
     return *this;
-}
-
+};
 BigInteger BigInteger::operator/(const BigInteger& rhs) const {
     BigInteger r = *this;
     r /= rhs;
@@ -240,10 +256,13 @@ BigInteger BigInteger::operator/(const BigInteger& rhs) const {
 }
 
 BigInteger& BigInteger::operator%=(const BigInteger& rhs) {
-    if (rhs.is_zero()){
+    if (rhs.is_zero()) {
         throw std::runtime_error("Division by zero");
     }
-    *this = *this - (*this / rhs) * rhs;
+    if (is_zero()) return *this;
+    
+    BigInteger quotient = *this / rhs;
+    *this = *this - quotient * rhs;
     return *this;
 };
 
