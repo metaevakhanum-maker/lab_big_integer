@@ -11,6 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include <climits>
+#include <stdexcept>
 
 // Вспомогательные функции
 static void remove_zeros(std::vector<int>& a) {
@@ -43,6 +44,7 @@ static std::vector<int> add_abs(const std::vector<int>& a, const std::vector<int
 }
 
 static std::vector<int> sub_abs(const std::vector<int>& a, const std::vector<int>& b) {
+    // Предполагаем, что a >= b
     std::vector<int> res;
     int borrow = 0;
     for (size_t i = 0; i < a.size(); i++) {
@@ -186,7 +188,7 @@ BigInteger& BigInteger::operator*=(const BigInteger& rhs) {
             if (j < rhs.digits_.size())
                 cur += 1LL * digits_[i] * rhs.digits_[j];
             res[i + j] = cur % 10;
-            carry = cur / 10;
+            carry = static_cast<int>(cur / 10);
         }
     }
     
@@ -221,7 +223,7 @@ BigInteger& BigInteger::operator/=(const BigInteger& rhs) {
     std::vector<int> res;
     BigInteger cur;
     
-    for (int i = a.digits_.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(a.digits_.size()) - 1; i >= 0; i--) {
         cur.digits_.insert(cur.digits_.begin(), a.digits_[i]);
         remove_zeros(cur.digits_);
         
@@ -238,7 +240,7 @@ BigInteger& BigInteger::operator/=(const BigInteger& rhs) {
             }
         }
         
-        cur.digits_ = sub_abs(cur.digits_, (b * x).digits_);
+        cur = cur - b * x;
         res.push_back(x);
     }
     
@@ -248,7 +250,8 @@ BigInteger& BigInteger::operator/=(const BigInteger& rhs) {
     negative_ = sign;
     if (is_zero()) negative_ = false;
     return *this;
-};
+}
+
 BigInteger BigInteger::operator/(const BigInteger& rhs) const {
     BigInteger r = *this;
     r /= rhs;
@@ -264,7 +267,13 @@ BigInteger& BigInteger::operator%=(const BigInteger& rhs) {
     BigInteger quotient = *this / rhs;
     *this = *this - quotient * rhs;
     return *this;
-};
+}
+
+BigInteger BigInteger::operator%(const BigInteger& rhs) const {
+    BigInteger r = *this;
+    r %= rhs;
+    return r;
+}
 
 // Унарные операции
 BigInteger BigInteger::operator-() const {
@@ -300,7 +309,7 @@ std::string BigInteger::to_string() const {
     if (is_zero()) return "0";
     std::string s;
     if (negative_) s += '-';
-    for (int i = digits_.size() - 1; i >= 0; i--)
+    for (int i = static_cast<int>(digits_.size()) - 1; i >= 0; i--)
         s += char('0' + digits_[i]);
     return s;
 }
